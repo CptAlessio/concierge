@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Concierge</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --calendar-icon-invert: 0;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa;
+            --success-color: #4ade80;
+            --danger-color: #f87171;
+            --warning-color: #fbbf24;
+            --background-color: #0f172a;
+            --card-background: #1e293b;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --calendar-icon-invert: 1;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 60px;
+            height: 100vh;
+            background-color: var(--card-background);
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 1px 0 3px var(--shadow-color);
+        }
+
+        .main-content {
+            margin-left: 80px;
+            padding: 20px;
+            width: calc(100% - 80px);
+        }
+
+        .sidebar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-btn:hover {
+            transform: translateY(-2px);
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .sidebar-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .theme-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--card-background);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: var(--card-background);
+            box-shadow: 0 1px 3px var(--shadow-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--card-background);
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-view {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--text-muted);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            color: var(--text-color);
+            margin: 5% auto;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: var(--text-muted);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            transition: color 0.2s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            padding-right: 30px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .form-group input:hover,
+        .form-group textarea:hover,
+        .form-group select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .form-group input[type="datetime-local"] {
+            padding: 7px 8px;
+        }
+
+        .form-group input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            filter: invert(var(--calendar-icon-invert));
+        }
+
+        .form-group input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            padding-right: 40px;
+        }
+
+        .priority-low {
+            color: var(--success-color);
+        }
+
+        .priority-normal {
+            color: var(--warning-color);
+        }
+
+        .priority-urgent {
+            color: var(--danger-color);
+        }
+
+        .detail-group label {
+            color: var(--text-muted);
+        }
+
+        .detail-group p {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Add styles for drag and drop */
+        tr.dragging {
+            background-color: var(--background-color) !important;
+            border: 2px dashed var(--text-muted);
+        }
+
+        tr.drag-over {
+            border-top: 2px solid var(--primary-color);
+        }
+
+        /* Style for the drag handle */
+        td div {
+            display: inline-block;
+            color: var(--text-muted);
+            font-weight: bold;
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        /* Prevent text selection while dragging */
+        tr {
+            user-select: none;
+        }
+
+        /* Hide the file input more elegantly */
+        .hidden-input {
+            display: none;
+        }
+
+        /* Calendar styles */
+        .calendar-modal {
+            max-width: 800px !important;
+            overflow-y: visible !important;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-controls h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .calendar-container {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            background-color: var(--background-color);
+            padding: 10px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: var(--border-color);
+        }
+
+        .calendar-day {
+            background-color: var(--card-background);
+            min-height: 100px;
+            padding: 8px;
+            position: relative;
+            overflow: hidden; /* Prevent content from overflowing */
+        }
+
+        .calendar-day.other-month {
+            background-color: var(--background-color);
+            color: var(--text-muted);
+        }
+
+        .calendar-day.today {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .day-number {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .task-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .task-dot.low {
+            background-color: var(--success-color);
+        }
+
+        .task-dot.normal {
+            background-color: var(--warning-color);
+        }
+
+        .task-dot.urgent {
+            background-color: var(--danger-color);
+        }
+
+        .day-tasks {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            overflow: hidden; /* Prevent tasks from overflowing */
+        }
+
+        .day-task {
+            margin-bottom: 4px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%; /* Ensure task stays within calendar cell */
+        }
+
+        .day-task.low {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .day-task.normal {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .day-task.urgent {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* Add these styles for the custom tooltip */
+        .custom-tooltip {
+            position: fixed;
+            display: none;
+            background-color: var(--card-background);
+            color: var(--text-color);
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tooltip-content {
+            font-size: 0.875rem;
+        }
+
+        .tooltip-label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+        }
+
+        .tooltip-value {
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px; /* Limit tooltip width */
+            background-color: var(--background-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .tooltip-value:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Add these new styles for table cells */
+        td {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Make the actions column width fixed */
+        td:last-child {
+            width: 200px;
+            white-space: nowrap;
+        }
+
+        /* Add hover tooltip for truncated content */
+        td[title]:hover {
+            position: relative;
+        }
+
+        td[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background-color: var(--card-background);
+            color: var(--text-color);
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            z-index: 1;
+            max-width: 300px;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        /* Add styles for custom scrollbar */
+        .modal-content::-webkit-scrollbar,
+        .detail-group p::-webkit-scrollbar,
+        .form-group textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track,
+        .detail-group p::-webkit-scrollbar-track,
+        .form-group textarea::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb,
+        .detail-group p::-webkit-scrollbar-thumb,
+        .form-group textarea::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover,
+        .detail-group p::-webkit-scrollbar-thumb:hover,
+        .form-group textarea::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Update button styles for icons */
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* Add tooltip for icon buttons */
+        .btn-icon[data-tooltip] {
+            position: relative;
+        }
+
+        .btn-icon[data-tooltip]:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: var(--card-background);
+            color: var(--text-color);
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            z-index: 1;
+        }
+
+        .btn-icon[data-tooltip]:hover:before {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button id="openModalBtn" class="sidebar-btn" title="Add Task">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button onclick="openCalendar()" class="sidebar-btn" title="Calendar">
+            <i class="fas fa-calendar-alt"></i>
+        </button>
+        <button onclick="exportTasks()" class="sidebar-btn" title="Export Tasks">
+            <i class="fas fa-file-export"></i>
+        </button>
+        <button onclick="document.getElementById('importInput').click()" class="sidebar-btn" title="Import Tasks">
+            <i class="fas fa-file-import"></i>
+        </button>
+        <input type="file" id="importInput" accept=".json" class="hidden-input" onchange="importTasks(event)">
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>Concierge</h1>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <!-- Add the modal HTML -->
+            <div id="taskModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Add New Task</h2>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <textarea id="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="links">Links:</label>
+                            <input type="text" id="links">
+                        </div>
+                        <div class="form-group">
+                            <label for="priority">Priority:</label>
+                            <select id="priority">
+                                <option value="Low">Low</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="deadline">Deadline:</label>
+                            <input type="datetime-local" id="deadline" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Task</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Add this new modal HTML right after the existing taskModal div -->
+            <div id="viewTaskModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" id="viewModalClose">&times;</span>
+                    <h2>Task Details</h2>
+                    <div class="task-details">
+                        <div class="detail-group">
+                            <label>Name:</label>
+                            <p id="viewName"></p>
+                        </div>
+                        <div class="detail-group">
+                            <label>Description:</label>
+                            <p id="viewDescription"></p>
+                        </div>
+                        <div class="detail-group">
+                            <label>Links:</label>
+                            <p id="viewLinks"></p>
+                        </div>
+                        <div class="detail-group">
+                            <label>Priority:</label>
+                            <p id="viewPriority"></p>
+                        </div>
+                        <div class="detail-group">
+                            <label>Deadline:</label>
+                            <p id="viewDeadline"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add this new modal HTML after the viewTaskModal div -->
+            <div id="calendarModal" class="modal">
+                <div class="modal-content calendar-modal">
+                    <span class="close" id="calendarClose">&times;</span>
+                    <h2>Task Calendar</h2>
+                    <div class="calendar-controls">
+                        <button class="btn btn-secondary" onclick="previousMonth()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3 id="currentMonth"></h3>
+                        <button class="btn btn-secondary" onclick="nextMonth()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <div>Sun</div>
+                            <div>Mon</div>
+                            <div>Tue</div>
+                            <div>Wed</div>
+                            <div>Thu</div>
+                            <div>Fri</div>
+                            <div>Sat</div>
+                        </div>
+                        <div id="calendarDays" class="calendar-days"></div>
+                    </div>
+                </div>
+            </div>
+
+            <table id="taskTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Links</th>
+                        <th>Priority</th>
+                        <th>Deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="taskList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="taskTooltip" class="custom-tooltip"></div>
+
+    <script>
+        // Task management functionality
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+        // Add this new function to get tomorrow's date at 9:00 AM
+        function getDefaultDeadline() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(9, 0, 0, 0);
+            return tomorrow.toISOString().slice(0, 16); // Format for datetime-local input
+        }
+
+        // Add this function to set the default deadline when the page loads
+        function setDefaultDeadline() {
+            document.getElementById('deadline').value = getDefaultDeadline();
+        }
+
+        // Add these modal functions
+        const modal = document.getElementById('taskModal');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const closeBtn = document.getElementsByClassName('close')[0];
+
+        openModalBtn.onclick = function() {
+            modal.style.display = "block";
+            setDefaultDeadline();
+        }
+
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+            document.getElementById('taskForm').reset();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                document.getElementById('taskForm').reset();
+            }
+            if (event.target == viewModal) {
+                viewModal.style.display = "none";
+            }
+            if (event.target == calendarModal) {
+                calendarModal.style.display = "none";
+            }
+        }
+
+        // Update the editTask function to properly handle editing
+        function editTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                document.getElementById('name').value = task.name;
+                document.getElementById('description').value = task.description;
+                document.getElementById('links').value = task.links;
+                document.getElementById('priority').value = task.priority;
+                document.getElementById('deadline').value = task.deadline;
+                
+                // Store the task ID for updating
+                modal.dataset.editTaskId = taskId;
+                
+                // Change button to update icon
+                const submitButton = document.querySelector('#taskForm button[type="submit"]');
+                submitButton.innerHTML = '<i class="fas fa-save"></i> Update Task';
+                
+                // Show the modal
+                modal.style.display = "block";
+            }
+        }
+
+        // Update the addTask function to handle both adding and editing
+        function addTask(event) {
+            event.preventDefault();
+            
+            const taskData = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                links: document.getElementById('links').value,
+                priority: document.getElementById('priority').value,
+                deadline: document.getElementById('deadline').value
+            };
+
+            const editTaskId = modal.dataset.editTaskId;
+            
+            if (editTaskId) {
+                // Editing existing task
+                const taskIndex = tasks.findIndex(t => t.id === parseInt(editTaskId));
+                if (taskIndex !== -1) {
+                    taskData.id = parseInt(editTaskId);
+                    tasks[taskIndex] = taskData;
+                }
+                // Clear the edit task ID
+                delete modal.dataset.editTaskId;
+                // Reset button text
+                const submitButton = document.querySelector('#taskForm button[type="submit"]');
+                submitButton.innerHTML = '<i class="fas fa-plus"></i> Add Task';
+            } else {
+                // Adding new task
+                taskData.id = Date.now();
+                tasks.push(taskData);
+            }
+
+            saveTasks();
+            renderTasks();
+            event.target.reset();
+            modal.style.display = "none";
+        }
+
+        function deleteTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                const confirmDelete = confirm(`Are you sure you want to delete the task "${task.name}"?`);
+                if (confirmDelete) {
+                    tasks = tasks.filter(task => task.id !== taskId);
+                    saveTasks();
+                    renderTasks();
+                }
+            }
+        }
+
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Add these new modal variables
+        const viewModal = document.getElementById('viewTaskModal');
+        const viewModalClose = document.getElementById('viewModalClose');
+
+        // Add this new function to view task details
+        function viewTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                document.getElementById('viewName').textContent = task.name;
+                document.getElementById('viewDescription').textContent = task.description || 'No description';
+                document.getElementById('viewLinks').textContent = task.links || 'No links';
+                document.getElementById('viewPriority').textContent = task.priority;
+                document.getElementById('viewDeadline').textContent = new Date(task.deadline).toLocaleString();
+                viewModal.style.display = "block";
+            }
+        }
+
+        // Add view modal close handlers
+        viewModalClose.onclick = function() {
+            viewModal.style.display = "none";
+        }
+
+        // Add this function to handle task reordering
+        function reorderTasks(fromIndex, toIndex) {
+            const task = tasks.splice(fromIndex, 1)[0];
+            tasks.splice(toIndex, 0, task);
+            saveTasks();
+        }
+
+        // Add this new helper function before the renderTasks function
+        function truncateText(text, maxLength = 50) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+
+        // Add this function to calculate time remaining
+        function getTimeRemaining(deadline) {
+            const now = new Date();
+            const deadlineDate = new Date(deadline);
+            const timeDiff = deadlineDate - now;
+
+            if (timeDiff < 0) {
+                return 'Overdue';
+            }
+
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 30) {
+                const months = Math.floor(days / 30);
+                return `${months} month${months > 1 ? 's' : ''} left`;
+            }
+            if (days > 0) {
+                return `${days} day${days > 1 ? 's' : ''} left`;
+            }
+            if (hours > 0) {
+                return `${hours} hour${hours > 1 ? 's' : ''} left`;
+            }
+            return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
+        }
+
+        // Update the renderTasks function to use time remaining
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                const row = document.createElement('tr');
+                row.draggable = true;
+                row.dataset.index = index;
+                
+                // Add drag event listeners
+                row.addEventListener('dragstart', handleDragStart);
+                row.addEventListener('dragover', handleDragOver);
+                row.addEventListener('drop', handleDrop);
+                row.addEventListener('dragenter', handleDragEnter);
+                row.addEventListener('dragleave', handleDragLeave);
+
+                const timeRemaining = getTimeRemaining(task.deadline);
+                const fullDateTime = new Date(task.deadline).toLocaleString();
+                const timeRemainingClass = timeRemaining === 'Overdue' ? 'priority-urgent' : '';
+
+                row.innerHTML = `
+                    <td>
+                        <div style="cursor: move; padding: 8px; display: inline-block;">
+                            ⋮⋮
+                        </div>
+                        ${truncateText(task.name, 30)}
+                    </td>
+                    <td title="${task.description || ''}">${truncateText(task.description, 50)}</td>
+                    <td title="${task.links || ''}">${truncateText(task.links, 30)}</td>
+                    <td class="priority-${task.priority.toLowerCase()}">${task.priority}</td>
+                    <td class="${timeRemainingClass}" title="${fullDateTime}">${timeRemaining}</td>
+                    <td class="actions-group">
+                        <button onclick="viewTask(${task.id})" class="btn btn-view btn-icon" data-tooltip="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editTask(${task.id})" class="btn btn-primary btn-icon" data-tooltip="Edit Task">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteTask(${task.id})" class="btn btn-danger btn-icon" data-tooltip="Delete Task">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                taskList.appendChild(row);
+            });
+        }
+
+        // Add drag and drop handler functions
+        let draggedRow = null;
+        let draggedRowIndex = null;
+
+        function handleDragStart(e) {
+            draggedRow = this;
+            draggedRowIndex = parseInt(this.dataset.index);
+            this.style.opacity = '0.4';
+            
+            // Add visual feedback
+            this.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            // Add visual feedback
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            // Remove visual feedback
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            // Remove visual feedback
+            this.classList.remove('drag-over');
+            draggedRow.classList.remove('dragging');
+            draggedRow.style.opacity = '1';
+
+            const droppedRowIndex = parseInt(this.dataset.index);
+
+            if (draggedRowIndex !== droppedRowIndex) {
+                reorderTasks(draggedRowIndex, droppedRowIndex);
+                renderTasks();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('taskForm').addEventListener('submit', addTask);
+        
+        // Set default deadline when page loads
+        setDefaultDeadline();
+
+        // Set default deadline when form is reset
+        document.getElementById('taskForm').addEventListener('reset', () => {
+            setTimeout(setDefaultDeadline, 0);
+        });
+
+        // Initial render
+        renderTasks();
+
+        // Add these new functions for import/export
+        function exportTasks() {
+            const tasksJson = JSON.stringify(tasks, null, 2);
+            const blob = new Blob([tasksJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tasks.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importTasks(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedTasks = JSON.parse(e.target.result);
+                        if (Array.isArray(importedTasks)) {
+                            const confirmation = confirm("This will replace your current tasks. Continue?");
+                            if (confirmation) {
+                                tasks = importedTasks;
+                                saveTasks();
+                                renderTasks();
+                                alert("Tasks imported successfully!");
+                            }
+                        } else {
+                            alert("Invalid task file format!");
+                        }
+                    } catch (error) {
+                        alert("Error reading the file: " + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            // Reset the input so the same file can be imported again
+            event.target.value = '';
+        }
+
+        // Add dark mode functionality
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.checked = savedTheme === 'dark';
+
+        // Theme toggle handler
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Calendar functionality
+        let currentDate = new Date();
+        const calendarModal = document.getElementById('calendarModal');
+        const calendarClose = document.getElementById('calendarClose');
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        function openCalendar() {
+            calendarModal.style.display = "block";
+            renderCalendar();
+        }
+
+        calendarClose.onclick = function() {
+            calendarModal.style.display = "none";
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function getTasksForDate(date) {
+            return tasks.filter(task => {
+                const taskDate = new Date(task.deadline);
+                return taskDate.getDate() === date.getDate() &&
+                       taskDate.getMonth() === date.getMonth() &&
+                       taskDate.getFullYear() === date.getFullYear();
+            });
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('currentMonth').textContent = 
+                `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            // Previous month's days
+            const prevMonth = new Date(year, month, 0);
+            const prevMonthDays = prevMonth.getDate();
+            for (let i = startingDay - 1; i >= 0; i--) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day other-month';
+                dayDiv.innerHTML = `<span class="day-number">${prevMonthDays - i}</span>`;
+                calendarDays.appendChild(dayDiv);
+            }
+
+            // Current month's days
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayDiv = document.createElement('div');
+                const currentDayDate = new Date(year, month, i);
+                dayDiv.className = 'calendar-day' + 
+                    (today.toDateString() === currentDayDate.toDateString() ? ' today' : '');
+
+                const dayTasks = getTasksForDate(currentDayDate);
+                let tasksHtml = '<div class="day-tasks">';
+                dayTasks.forEach(task => {
+                    tasksHtml += `
+                        <div class="day-task ${task.priority.toLowerCase()}" 
+                             title="${task.name}"
+                             onmouseover="showTooltip(${task.id}, event)"
+                             onmouseout="hideTooltip()">
+                            ${task.name}
+                        </div>
+                    `
+                });
+                tasksHtml += '</div>';
+
+                dayDiv.innerHTML = `
+                    <span class="day-number">${i}</span>
+                    ${tasksHtml}
+                `;
+                calendarDays.appendChild(dayDiv);
+            }
+
+            // Next month's days
+            const totalDays = calendarDays.children.length;
+            const remainingDays = 42 - totalDays; // 6 rows × 7 days = 42
+            for (let i = 1; i <= remainingDays; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day other-month';
+                dayDiv.innerHTML = `<span class="day-number">${i}</span>`;
+                calendarDays.appendChild(dayDiv);
+            }
+        }
+
+        // Update the showTooltip function to truncate description
+        function showTooltip(taskId, event) {
+            const tooltip = document.getElementById('taskTooltip');
+            const task = tasks.find(t => t.id === taskId);
+            
+            if (task) {
+                const tooltipContent = `
+                    <div class="tooltip-content">
+                        <div class="tooltip-label">Name</div>
+                        <div class="tooltip-value">${truncateText(task.name, 30)}</div>
+                        <div class="tooltip-label">Description</div>
+                        <div class="tooltip-value">${truncateText(task.description, 30) || 'No description'}</div>
+                        <div class="tooltip-label">Links</div>
+                        <div class="tooltip-value">${truncateText(task.links, 30) || 'No links'}</div>
+                        <div class="tooltip-label">Priority</div>
+                        <div class="tooltip-value">${task.priority}</div>
+                        <div class="tooltip-label">Deadline</div>
+                        <div class="tooltip-value">${new Date(task.deadline).toLocaleString()}</div>
+                    </div>
+                `;
+                
+                tooltip.innerHTML = tooltipContent;
+                tooltip.style.display = 'block';
+                
+                // Position the tooltip near the mouse
+                const padding = 10;
+                let left = event.pageX + padding;
+                let top = event.pageY + padding;
+                
+                // Adjust position if tooltip would go off screen
+                const tooltipRect = tooltip.getBoundingClientRect();
+                if (left + tooltipRect.width > window.innerWidth) {
+                    left = event.pageX - tooltipRect.width - padding;
+                }
+                if (top + tooltipRect.height > window.innerHeight) {
+                    top = event.pageY - tooltipRect.height - padding;
+                }
+                
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('taskTooltip');
+            tooltip.style.display = 'none';
+        }
+
+        // Add an interval to update time remaining every minute
+        setInterval(renderTasks, 60000); // Update every minute
+    </script>
+</body>
+</html>
