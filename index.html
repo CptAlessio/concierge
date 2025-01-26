@@ -700,6 +700,179 @@
             opacity: 1;
             visibility: visible;
         }
+
+        .filter-bar {
+            background-color: var(--card-background);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 1px 3px var(--shadow-color);
+        }
+
+        .filter-group, .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label, .sort-group label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .filter-group select,
+        .filter-group input,
+        .sort-group select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+
+        .filter-group input {
+            min-width: 200px;
+        }
+
+        .filter-group select:hover,
+        .filter-group input:hover,
+        .sort-group select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus,
+        .sort-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        #sortDirection {
+            padding: 8px;
+            height: auto;
+            width: auto;
+        }
+
+        .notification-banner {
+            background-color: var(--card-background);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px var(--shadow-color);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .notification-banner i.fa-bell {
+            color: var(--warning-color);
+            font-size: 1.2rem;
+        }
+
+        .notification-banner span {
+            flex-grow: 1;
+            color: var(--text-color);
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-settings {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: var(--background-color);
+            border-radius: 8px;
+        }
+
+        .notification-settings h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .notification-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .notification-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .notification-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .notification-option label {
+            color: var(--text-color);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .world-clock-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .clock-item {
+            background-color: var(--background-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .clock-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        .clock-item .city {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .clock-item .time {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .clock-item .date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
     </style>
 </head>
 <body>
@@ -716,6 +889,12 @@
         <button onclick="document.getElementById('importInput').click()" class="sidebar-btn" title="Import Tasks">
             <i class="fas fa-file-import"></i>
         </button>
+<<<<<<< HEAD
+        <button onclick="openWorldClock()" class="sidebar-btn" title="World Clock">
+            <i class="fas fa-globe"></i>
+        </button>
+=======
+>>>>>>> 830b3e5ae41a9e63031344851f11b4fbacdc31f2
         <label class="theme-toggle sidebar-btn" title="Toggle Theme">
             <input type="checkbox" id="themeToggle">
             <span class="toggle-icon">
@@ -732,6 +911,54 @@
                 <h1>Concierge</h1>
             </div>
             
+            <!-- Add this right after the header div and before the table -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label for="filterPriority">Priority:</label>
+                    <select id="filterPriority" onchange="applyFilters()">
+                        <option value="">All</option>
+                        <option value="Low">Low</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterDeadline">Deadline:</label>
+                    <select id="filterDeadline" onchange="applyFilters()">
+                        <option value="">All</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="searchTasks">Search:</label>
+                    <input type="text" id="searchTasks" placeholder="Search tasks..." oninput="applyFilters()">
+                </div>
+                <div class="sort-group">
+                    <label for="sortBy">Sort By:</label>
+                    <select id="sortBy" onchange="applyFilters()">
+                        <option value="deadline">Deadline</option>
+                        <option value="priority">Priority</option>
+                        <option value="name">Name</option>
+                    </select>
+                    <button class="btn btn-icon" onclick="toggleSortDirection()" id="sortDirection" data-tooltip="Sort Direction">
+                        <i class="fas fa-sort-amount-down"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add this right after the filter-bar div -->
+            <div id="notificationBanner" class="notification-banner" style="display: none;">
+                <i class="fas fa-bell"></i>
+                <span>Enable notifications to get reminders for upcoming tasks</span>
+                <button onclick="requestNotificationPermission()" class="btn btn-primary">Enable Notifications</button>
+                <button onclick="dismissNotificationBanner()" class="btn btn-icon" data-tooltip="Dismiss">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
             <!-- Add the modal HTML -->
             <div id="taskModal" class="modal">
                 <div class="modal-content">
@@ -761,6 +988,17 @@
                         <div class="form-group">
                             <label for="deadline">Deadline:</label>
                             <input type="datetime-local" id="deadline" required>
+                        </div>
+                        <div class="notification-settings">
+                            <h3>Notification Settings</h3>
+                            <div class="notification-option">
+                                <input type="checkbox" id="notifyDay" checked>
+                                <label for="notifyDay">Notify 1 day before deadline</label>
+                            </div>
+                            <div class="notification-option">
+                                <input type="checkbox" id="notifyHour" checked>
+                                <label for="notifyHour">Notify 1 hour before deadline</label>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Task</button>
                     </form>
@@ -826,6 +1064,41 @@
                 </div>
             </div>
 
+            <!-- Add this new modal HTML after the calendarModal div -->
+            <div id="worldClockModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" id="worldClockClose">&times;</span>
+                    <h2>World Clock</h2>
+                    <div class="world-clock-container">
+                        <div class="clock-item">
+                            <div class="city">San Francisco</div>
+                            <div class="time" id="sf-time"></div>
+                            <div class="date" id="sf-date"></div>
+                        </div>
+                        <div class="clock-item">
+                            <div class="city">New York</div>
+                            <div class="time" id="ny-time"></div>
+                            <div class="date" id="ny-date"></div>
+                        </div>
+                        <div class="clock-item">
+                            <div class="city">London</div>
+                            <div class="time" id="london-time"></div>
+                            <div class="date" id="london-date"></div>
+                        </div>
+                        <div class="clock-item">
+                            <div class="city">Dublin</div>
+                            <div class="time" id="dublin-time"></div>
+                            <div class="date" id="dublin-date"></div>
+                        </div>
+                        <div class="clock-item">
+                            <div class="city">Geneva</div>
+                            <div class="time" id="geneva-time"></div>
+                            <div class="date" id="geneva-date"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <table id="taskTable">
                 <thead>
                     <tr>
@@ -886,6 +1159,9 @@
             if (event.target == calendarModal) {
                 calendarModal.style.display = "none";
             }
+            if (event.target == worldClockModal) {
+                worldClockModal.style.display = "none";
+            }
         }
 
         // Update the editTask function to properly handle editing
@@ -897,6 +1173,12 @@
                 document.getElementById('links').value = task.links;
                 document.getElementById('priority').value = task.priority;
                 document.getElementById('deadline').value = task.deadline;
+                
+                // Set notification preferences
+                document.getElementById('notifyDay').checked = 
+                    task.notifications ? task.notifications.day : true;
+                document.getElementById('notifyHour').checked = 
+                    task.notifications ? task.notifications.hour : true;
                 
                 // Store the task ID for updating
                 modal.dataset.editTaskId = taskId;
@@ -919,7 +1201,11 @@
                 description: document.getElementById('description').value,
                 links: document.getElementById('links').value,
                 priority: document.getElementById('priority').value,
-                deadline: document.getElementById('deadline').value
+                deadline: document.getElementById('deadline').value,
+                notifications: {
+                    day: document.getElementById('notifyDay').checked,
+                    hour: document.getElementById('notifyHour').checked
+                }
             };
 
             const editTaskId = modal.dataset.editTaskId;
@@ -946,6 +1232,12 @@
             renderTasks();
             event.target.reset();
             modal.style.display = "none";
+
+            // Clear any existing notification records for this task
+            if (editTaskId) {
+                localStorage.removeItem(`notification_${editTaskId}_24 hours`);
+                localStorage.removeItem(`notification_${editTaskId}_1 hour`);
+            }
         }
 
         function deleteTask(taskId) {
@@ -1027,34 +1319,133 @@
             return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
         }
 
-        // Update the renderTasks function to use time remaining
-        function renderTasks() {
+        // Add these new variables for sorting and filtering
+        let sortDirection = 'desc';
+        let currentFilters = {
+            priority: '',
+            deadline: '',
+            search: '',
+            sortBy: 'deadline'
+        };
+
+        function toggleSortDirection() {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            const icon = document.querySelector('#sortDirection i');
+            icon.className = `fas fa-sort-amount-${sortDirection}`;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            // Get filter values
+            currentFilters = {
+                priority: document.getElementById('filterPriority').value,
+                deadline: document.getElementById('filterDeadline').value,
+                search: document.getElementById('searchTasks').value.toLowerCase(),
+                sortBy: document.getElementById('sortBy').value
+            };
+
+            // Filter tasks
+            let filteredTasks = tasks.filter(task => {
+                // Priority filter
+                if (currentFilters.priority && task.priority !== currentFilters.priority) {
+                    return false;
+                }
+
+                // Deadline filter
+                const taskDate = new Date(task.deadline);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const weekLater = new Date(today);
+                weekLater.setDate(weekLater.getDate() + 7);
+                
+                const monthLater = new Date(today);
+                monthLater.setMonth(monthLater.getMonth() + 1);
+
+                switch (currentFilters.deadline) {
+                    case 'overdue':
+                        if (taskDate >= today) return false;
+                        break;
+                    case 'today':
+                        if (taskDate < today || taskDate >= tomorrow) return false;
+                        break;
+                    case 'week':
+                        if (taskDate < today || taskDate >= weekLater) return false;
+                        break;
+                    case 'month':
+                        if (taskDate < today || taskDate >= monthLater) return false;
+                        break;
+                }
+
+                // Search filter
+                const searchTerm = currentFilters.search.toLowerCase();
+                if (searchTerm) {
+                    return task.name.toLowerCase().includes(searchTerm) ||
+                           task.description.toLowerCase().includes(searchTerm) ||
+                           task.links.toLowerCase().includes(searchTerm);
+                }
+
+                return true;
+            });
+
+            // Sort tasks
+            const priorityOrder = { 'Urgent': 3, 'Normal': 2, 'Low': 1 };
+            
+            filteredTasks.sort((a, b) => {
+                let comparison = 0;
+                
+                switch (currentFilters.sortBy) {
+                    case 'deadline':
+                        comparison = new Date(a.deadline) - new Date(b.deadline);
+                        break;
+                    case 'priority':
+                        comparison = priorityOrder[b.priority] - priorityOrder[a.priority];
+                        break;
+                    case 'name':
+                        comparison = a.name.localeCompare(b.name);
+                        break;
+                }
+
+                return sortDirection === 'asc' ? comparison : -comparison;
+            });
+
+            // Update the tasks display
+            renderFilteredTasks(filteredTasks);
+        }
+
+        // Update the renderFilteredTasks function to store the filtered tasks and use correct indices
+        let currentFilteredTasks = []; // Add this at the top with other global variables
+
+        function renderFilteredTasks(filteredTasks) {
+            currentFilteredTasks = filteredTasks;
+            
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
-            tasks.forEach((task, index) => {
-                const row = document.createElement('tr');
-                row.draggable = true;
-                row.dataset.index = index;
-                
-                // Add drag event listeners
-                row.addEventListener('dragstart', handleDragStart);
-                row.addEventListener('dragover', handleDragOver);
-                row.addEventListener('drop', handleDrop);
-                row.addEventListener('dragenter', handleDragEnter);
-                row.addEventListener('dragleave', handleDragLeave);
+            if (filteredTasks.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="5" style="text-align: center; padding: 20px;">
+                        <i class="fas fa-search" style="font-size: 24px; color: var(--text-muted); margin-bottom: 10px;"></i>
+                        <p style="margin: 0; color: var(--text-muted);">No tasks found matching your filters</p>
+                    </td>
+                `;
+                taskList.appendChild(emptyRow);
+                return;
+            }
 
+            filteredTasks.forEach((task, index) => {
+                const row = document.createElement('tr');
+                
                 const timeRemaining = getTimeRemaining(task.deadline);
                 const fullDateTime = new Date(task.deadline).toLocaleString();
                 const timeRemainingClass = timeRemaining === 'Overdue' ? 'priority-urgent' : '';
 
                 row.innerHTML = `
-                    <td>
-                        <div style="cursor: move; padding: 8px; display: inline-block;">
-                            ⋮⋮
-                        </div>
-                        ${truncateText(task.name, 30)}
-                    </td>
+                    <td>${truncateText(task.name, 30)}</td>
                     <td title="${task.description || ''}">${truncateText(task.description, 50)}</td>
                     <td class="priority-${task.priority.toLowerCase()}">${task.priority}</td>
                     <td class="${timeRemainingClass}" title="${fullDateTime}">${timeRemaining}</td>
@@ -1074,63 +1465,10 @@
             });
         }
 
-        // Add drag and drop handler functions
-        let draggedRow = null;
-        let draggedRowIndex = null;
-
-        function handleDragStart(e) {
-            draggedRow = this;
-            draggedRowIndex = parseInt(this.dataset.index);
-            this.style.opacity = '0.4';
-            
-            // Add visual feedback
-            this.classList.add('dragging');
+        // Update the original renderTasks function to use the new filtering system
+        function renderTasks() {
+            applyFilters();
         }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function handleDragEnter(e) {
-            e.preventDefault();
-            // Add visual feedback
-            this.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            // Remove visual feedback
-            this.classList.remove('drag-over');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            
-            // Remove visual feedback
-            this.classList.remove('drag-over');
-            draggedRow.classList.remove('dragging');
-            draggedRow.style.opacity = '1';
-
-            const droppedRowIndex = parseInt(this.dataset.index);
-
-            if (draggedRowIndex !== droppedRowIndex) {
-                reorderTasks(draggedRowIndex, droppedRowIndex);
-                renderTasks();
-            }
-        }
-
-        // Event listeners
-        document.getElementById('taskForm').addEventListener('submit', addTask);
-        
-        // Set default deadline when page loads
-        setDefaultDeadline();
-
-        // Set default deadline when form is reset
-        document.getElementById('taskForm').addEventListener('reset', () => {
-            setTimeout(setDefaultDeadline, 0);
-        });
-
-        // Initial render
-        renderTasks();
 
         // Add these new functions for import/export
         function exportTasks() {
@@ -1345,6 +1683,171 @@
 
         // Add an interval to update time remaining every minute
         setInterval(renderTasks, 60000); // Update every minute
+
+        // Event listeners
+        document.getElementById('taskForm').addEventListener('submit', addTask);
+        
+        // Set default deadline when page loads
+        setDefaultDeadline();
+
+        // Set default deadline when form is reset
+        document.getElementById('taskForm').addEventListener('reset', () => {
+            setTimeout(setDefaultDeadline, 0);
+        });
+
+        // Initial render
+        renderTasks();
+
+        // Add notification-related variables
+        let notificationPermission = Notification.permission;
+        const NOTIFICATION_CHECK_INTERVAL = 60000; // Check every minute
+
+        // Function to handle notification permission
+        async function requestNotificationPermission() {
+            try {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission;
+                if (permission === 'granted') {
+                    document.getElementById('notificationBanner').style.display = 'none';
+                    // Save the preference
+                    localStorage.setItem('notificationBannerDismissed', 'true');
+                    initializeNotifications();
+                }
+            } catch (error) {
+                console.error('Error requesting notification permission:', error);
+            }
+        }
+
+        function dismissNotificationBanner() {
+            document.getElementById('notificationBanner').style.display = 'none';
+            localStorage.setItem('notificationBannerDismissed', 'true');
+        }
+
+        // Initialize notification system
+        function initializeNotifications() {
+            if (notificationPermission !== 'granted') {
+                // Show the banner if notifications aren't granted and it hasn't been dismissed
+                const bannerDismissed = localStorage.getItem('notificationBannerDismissed');
+                if (!bannerDismissed) {
+                    document.getElementById('notificationBanner').style.display = 'flex';
+                }
+                return;
+            }
+
+            // Start checking for notifications
+            checkNotifications();
+            setInterval(checkNotifications, NOTIFICATION_CHECK_INTERVAL);
+        }
+
+        // Function to check for tasks that need notifications
+        function checkNotifications() {
+            const now = new Date();
+            
+            tasks.forEach(task => {
+                const deadline = new Date(task.deadline);
+                const timeUntilDeadline = deadline - now;
+                
+                // Skip if deadline has passed
+                if (timeUntilDeadline <= 0) return;
+
+                // Check for 1-day notification
+                if (timeUntilDeadline <= 24 * 60 * 60 * 1000 && timeUntilDeadline > 23.9 * 60 * 60 * 1000) {
+                    showNotification(task, '24 hours');
+                }
+                
+                // Check for 1-hour notification
+                if (timeUntilDeadline <= 60 * 60 * 1000 && timeUntilDeadline > 59.9 * 60 * 60 * 1000) {
+                    showNotification(task, '1 hour');
+                }
+            });
+        }
+
+        // Function to show a notification
+        function showNotification(task, timeFrame) {
+            const notificationKey = `notification_${task.id}_${timeFrame}`;
+            
+            // Check if this notification has already been shown
+            if (localStorage.getItem(notificationKey)) return;
+            
+            // Create and show the notification
+            const notification = new Notification('Task Reminder', {
+                body: `"${task.name}" is due in ${timeFrame}`,
+                icon: '/favicon.ico', // Add a favicon to your project for this to work
+                tag: notificationKey
+            });
+
+            // Store that we've shown this notification
+            localStorage.setItem(notificationKey, 'true');
+
+            // Handle notification click
+            notification.onclick = function() {
+                window.focus();
+                viewTask(task.id);
+            };
+        }
+
+        // Initialize notifications when the page loads
+        document.addEventListener('DOMContentLoaded', initializeNotifications);
+
+        // World Clock functionality
+        const worldClockModal = document.getElementById('worldClockModal');
+        const worldClockClose = document.getElementById('worldClockClose');
+        let worldClockInterval;
+
+        const timeZones = {
+            'sf': 'America/Los_Angeles',
+            'ny': 'America/New_York',
+            'london': 'Europe/London',
+            'dublin': 'Europe/Dublin',
+            'geneva': 'Europe/Zurich'
+        };
+
+        function openWorldClock() {
+            worldClockModal.style.display = "block";
+            updateWorldClocks();
+            // Start the update interval
+            worldClockInterval = setInterval(updateWorldClocks, 1000);
+        }
+
+        worldClockClose.onclick = function() {
+            worldClockModal.style.display = "none";
+            // Clear the interval when closing
+            clearInterval(worldClockInterval);
+        }
+
+        function updateWorldClocks() {
+            const options = {
+                timeStyle: 'medium',
+                hour12: true
+            };
+
+            const dateOptions = {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            };
+
+            for (const [city, timezone] of Object.entries(timeZones)) {
+                const now = new Date();
+                
+                try {
+                    const timeElement = document.getElementById(`${city}-time`);
+                    const dateElement = document.getElementById(`${city}-date`);
+                    
+                    timeElement.textContent = now.toLocaleTimeString('en-US', {
+                        ...options,
+                        timeZone: timezone
+                    });
+                    
+                    dateElement.textContent = now.toLocaleDateString('en-US', {
+                        ...dateOptions,
+                        timeZone: timezone
+                    });
+                } catch (error) {
+                    console.error(`Error updating clock for ${city}:`, error);
+                }
+            }
+        }
     </script>
 </body>
 </html>
