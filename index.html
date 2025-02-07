@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <title>Concierge</title>
     <style>
         :root {
@@ -873,6 +874,68 @@
             color: var(--text-muted);
             font-variant-numeric: tabular-nums;
         }
+
+        /* Add styles for compact completed tasks table */
+        #completedTaskTable {
+            font-size: 0.9rem;
+        }
+
+        #completedTaskTable tr {
+            height: 40px;
+        }
+
+        #completedTaskTable td {
+            padding: 4px 16px;
+            vertical-align: middle;
+        }
+
+        #completedTaskTable .btn-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 0.9rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #completedTaskTable .actions-group {
+            gap: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-width: 70px;
+        }
+
+        #completedTaskTable td:last-child {
+            width: 100px;
+            text-align: left;
+            padding-right: 16px;
+        }
+
+        /* Add styles for the complete button */
+        .btn-complete {
+            background-color: #22c55e !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 12px 24px !important;
+            transition: all 0.3s ease !important;
+            border-radius: 8px !important;
+        }
+
+        .btn-complete:hover {
+            background-color: #16a34a !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .btn-complete:active {
+            transform: translateY(0) !important;
+        }
+
+        .btn-complete i {
+            margin-right: 8px !important;
+        }
     </style>
 </head>
 <body>
@@ -997,7 +1060,12 @@
                                 <label for="notifyHour">Notify 1 hour before deadline</label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Add Task</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                            <button type="submit" class="btn btn-primary">Add Task</button>
+                            <button type="button" id="completeTaskBtn" class="btn btn-complete" style="display: none; margin-left: auto;">
+                                <i class="fas fa-check"></i> Mark as Complete
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -1108,6 +1176,25 @@
                 </thead>
                 <tbody id="taskList"></tbody>
             </table>
+
+            <div id="completedTasksSection" style="display: none; margin-top: 60px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: var(--text-muted); margin: 0;">Completed Tasks</h2>
+                    <button onclick="deleteAllCompletedTasks()" class="btn btn-danger" style="margin: 0;">
+                        <i class="fas fa-trash-alt"></i> Delete All Completed
+                    </button>
+                </div>
+                <table id="completedTaskTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Completed Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="completedTaskList"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -1117,7 +1204,14 @@
         // Task management functionality
         let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-        // Add this new function to get tomorrow's date at 9:00 AM
+        // Convert existing tasks to include completed property if they don't have it
+        tasks = tasks.map(task => ({
+            ...task,
+            completed: task.completed || false,
+            completedDate: task.completedDate || null
+        }));
+
+        // Add this function to get tomorrow's date at 9:00 AM
         function getDefaultDeadline() {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1138,17 +1232,24 @@
         openModalBtn.onclick = function() {
             modal.style.display = "block";
             setDefaultDeadline();
+            // Hide complete button for new tasks
+            document.getElementById('completeTaskBtn').style.display = 'none';
+            // Reset submit button text
+            const submitButton = document.querySelector('#taskForm button[type="submit"]');
+            submitButton.innerHTML = '<i class="fas fa-plus"></i> Add Task';
         }
 
         closeBtn.onclick = function() {
             modal.style.display = "none";
             document.getElementById('taskForm').reset();
+            document.getElementById('completeTaskBtn').style.display = 'none';
         }
 
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
                 document.getElementById('taskForm').reset();
+                document.getElementById('completeTaskBtn').style.display = 'none';
             }
             if (event.target == viewModal) {
                 viewModal.style.display = "none";
@@ -1161,10 +1262,65 @@
             }
         }
 
-        // Update the editTask function to properly handle editing
-        function editTask(taskId) {
+        // Update the completeTask function to add confetti effect
+        function completeTask(taskId) {
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].completed = true;
+                tasks[taskIndex].completedDate = new Date().toISOString();
+                saveTasks();
+                
+                // Close the modal
+                modal.style.display = "none";
+                document.getElementById('taskForm').reset();
+                
+                // Trigger confetti effect
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#22c55e', '#16a34a', '#86efac', '#4ade80'],
+                    angle: 90,
+                    startVelocity: 30,
+                    gravity: 0.8,
+                    ticks: 200
+                });
+
+                // Add a second burst of confetti after a small delay
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 50,
+                        spread: 60,
+                        origin: { y: 0.6 },
+                        colors: ['#22c55e', '#16a34a', '#86efac', '#4ade80'],
+                        angle: 120,
+                        startVelocity: 25,
+                        gravity: 0.7,
+                        ticks: 150
+                    });
+                }, 200);
+
+                renderTasks();
+            }
+        }
+
+        // Update the deleteTask function to work with both tables
+        function deleteTask(taskId) {
             const task = tasks.find(t => t.id === taskId);
             if (task) {
+                const confirmDelete = confirm(`Are you sure you want to delete the task "${task.name}"?`);
+                if (confirmDelete) {
+                    tasks = tasks.filter(task => task.id !== taskId);
+                    saveTasks();
+                    renderTasks();
+                }
+            }
+        }
+
+        // Update the editTask function to style the complete button
+        function editTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task && !task.completed) {
                 document.getElementById('name').value = task.name;
                 document.getElementById('description').value = task.description;
                 document.getElementById('links').value = task.links;
@@ -1179,6 +1335,12 @@
                 
                 // Store the task ID for updating
                 modal.dataset.editTaskId = taskId;
+                
+                // Show complete button and update submit button text
+                const completeTaskBtn = document.getElementById('completeTaskBtn');
+                completeTaskBtn.style.display = 'block';
+                completeTaskBtn.className = 'btn btn-complete';
+                completeTaskBtn.onclick = () => completeTask(taskId);
                 
                 // Change button to update icon
                 const submitButton = document.querySelector('#taskForm button[type="submit"]');
@@ -1237,18 +1399,6 @@
             }
         }
 
-        function deleteTask(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (task) {
-                const confirmDelete = confirm(`Are you sure you want to delete the task "${task.name}"?`);
-                if (confirmDelete) {
-                    tasks = tasks.filter(task => task.id !== taskId);
-                    saveTasks();
-                    renderTasks();
-                }
-            }
-        }
-
         function saveTasks() {
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
@@ -1265,7 +1415,19 @@
                 document.getElementById('viewDescription').textContent = task.description || 'No description';
                 document.getElementById('viewLinks').textContent = task.links || 'No links';
                 document.getElementById('viewPriority').textContent = task.priority;
-                document.getElementById('viewDeadline').textContent = new Date(task.deadline).toLocaleString();
+                
+                // Show either deadline or completed date based on task status
+                const dateLabel = document.querySelector('#viewTaskModal .detail-group:last-child label');
+                const dateValue = document.getElementById('viewDeadline');
+                
+                if (task.completed) {
+                    dateLabel.textContent = 'Completed Date:';
+                    dateValue.textContent = new Date(task.completedDate).toLocaleString();
+                } else {
+                    dateLabel.textContent = 'Deadline:';
+                    dateValue.textContent = new Date(task.deadline).toLocaleString();
+                }
+                
                 viewModal.style.display = "block";
             }
         }
@@ -1343,41 +1505,43 @@
 
             // Filter tasks
             let filteredTasks = tasks.filter(task => {
-                // Priority filter
-                if (currentFilters.priority && task.priority !== currentFilters.priority) {
+                // Priority filter (only apply to active tasks)
+                if (!task.completed && currentFilters.priority && task.priority !== currentFilters.priority) {
                     return false;
                 }
 
-                // Deadline filter
-                const taskDate = new Date(task.deadline);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                const weekLater = new Date(today);
-                weekLater.setDate(weekLater.getDate() + 7);
-                
-                const monthLater = new Date(today);
-                monthLater.setMonth(monthLater.getMonth() + 1);
+                // Deadline filter (only apply to active tasks)
+                if (!task.completed && currentFilters.deadline) {
+                    const taskDate = new Date(task.deadline);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    
+                    const weekLater = new Date(today);
+                    weekLater.setDate(weekLater.getDate() + 7);
+                    
+                    const monthLater = new Date(today);
+                    monthLater.setMonth(monthLater.getMonth() + 1);
 
-                switch (currentFilters.deadline) {
-                    case 'overdue':
-                        if (taskDate >= today) return false;
-                        break;
-                    case 'today':
-                        if (taskDate < today || taskDate >= tomorrow) return false;
-                        break;
-                    case 'week':
-                        if (taskDate < today || taskDate >= weekLater) return false;
-                        break;
-                    case 'month':
-                        if (taskDate < today || taskDate >= monthLater) return false;
-                        break;
+                    switch (currentFilters.deadline) {
+                        case 'overdue':
+                            if (taskDate >= today) return false;
+                            break;
+                        case 'today':
+                            if (taskDate < today || taskDate >= tomorrow) return false;
+                            break;
+                        case 'week':
+                            if (taskDate < today || taskDate >= weekLater) return false;
+                            break;
+                        case 'month':
+                            if (taskDate < today || taskDate >= monthLater) return false;
+                            break;
+                    }
                 }
 
-                // Search filter
+                // Search filter (apply to both active and completed tasks)
                 const searchTerm = currentFilters.search.toLowerCase();
                 if (searchTerm) {
                     return task.name.toLowerCase().includes(searchTerm) ||
@@ -1394,6 +1558,17 @@
             filteredTasks.sort((a, b) => {
                 let comparison = 0;
                 
+                // Always sort completed tasks to the bottom
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+
+                // For completed tasks, sort by completion date
+                if (a.completed && b.completed) {
+                    return new Date(b.completedDate) - new Date(a.completedDate);
+                }
+
+                // For active tasks, use the selected sort criteria
                 switch (currentFilters.sortBy) {
                     case 'deadline':
                         comparison = new Date(a.deadline) - new Date(b.deadline);
@@ -1413,53 +1588,94 @@
             renderFilteredTasks(filteredTasks);
         }
 
-        // Update the renderFilteredTasks function to store the filtered tasks and use correct indices
+        // Update the renderFilteredTasks function to handle both active and completed tasks
         let currentFilteredTasks = []; // Add this at the top with other global variables
 
         function renderFilteredTasks(filteredTasks) {
             currentFilteredTasks = filteredTasks;
             
+            const activeTasks = filteredTasks.filter(task => !task.completed);
+            const completedTasks = filteredTasks.filter(task => task.completed);
+            
+            // Show/hide completed tasks section based on whether there are completed tasks
+            const completedTasksSection = document.getElementById('completedTasksSection');
+            completedTasksSection.style.display = completedTasks.length > 0 ? 'block' : 'none';
+            
+            // Render active tasks
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
-            if (filteredTasks.length === 0) {
+            if (activeTasks.length === 0) {
                 const emptyRow = document.createElement('tr');
                 emptyRow.innerHTML = `
                     <td colspan="5" style="text-align: center; padding: 20px;">
                         <i class="fas fa-search" style="font-size: 24px; color: var(--text-muted); margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: var(--text-muted);">No tasks found matching your filters</p>
+                        <p style="margin: 0; color: var(--text-muted);">No active tasks found matching your filters</p>
                     </td>
                 `;
                 taskList.appendChild(emptyRow);
-                return;
+            } else {
+                activeTasks.forEach((task, index) => {
+                    const row = document.createElement('tr');
+                    
+                    const timeRemaining = getTimeRemaining(task.deadline);
+                    const fullDateTime = new Date(task.deadline).toLocaleString();
+                    const timeRemainingClass = timeRemaining === 'Overdue' ? 'priority-urgent' : '';
+
+                    row.innerHTML = `
+                        <td>${truncateText(task.name, 30)}</td>
+                        <td title="${task.description || ''}">${truncateText(task.description, 50)}</td>
+                        <td class="priority-${task.priority.toLowerCase()}">${task.priority}</td>
+                        <td class="${timeRemainingClass}" title="${fullDateTime}">${timeRemaining}</td>
+                        <td class="actions-group">
+                            <button onclick="viewTask(${task.id})" class="btn btn-view btn-icon" data-tooltip="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="editTask(${task.id})" class="btn btn-primary btn-icon" data-tooltip="Edit Task">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteTask(${task.id})" class="btn btn-danger btn-icon" data-tooltip="Delete Task">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    taskList.appendChild(row);
+                });
             }
 
-            filteredTasks.forEach((task, index) => {
-                const row = document.createElement('tr');
-                
-                const timeRemaining = getTimeRemaining(task.deadline);
-                const fullDateTime = new Date(task.deadline).toLocaleString();
-                const timeRemainingClass = timeRemaining === 'Overdue' ? 'priority-urgent' : '';
+            // Render completed tasks
+            const completedTaskList = document.getElementById('completedTaskList');
+            completedTaskList.innerHTML = '';
 
-                row.innerHTML = `
-                    <td>${truncateText(task.name, 30)}</td>
-                    <td title="${task.description || ''}">${truncateText(task.description, 50)}</td>
-                    <td class="priority-${task.priority.toLowerCase()}">${task.priority}</td>
-                    <td class="${timeRemainingClass}" title="${fullDateTime}">${timeRemaining}</td>
-                    <td class="actions-group">
-                        <button onclick="viewTask(${task.id})" class="btn btn-view btn-icon" data-tooltip="View Details">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button onclick="editTask(${task.id})" class="btn btn-primary btn-icon" data-tooltip="Edit Task">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteTask(${task.id})" class="btn btn-danger btn-icon" data-tooltip="Delete Task">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+            if (completedTasks.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="3" style="text-align: center; padding: 12px;">
+                        <i class="fas fa-check-circle" style="font-size: 20px; color: var(--text-muted); margin-bottom: 8px;"></i>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">No completed tasks found</p>
                     </td>
                 `;
-                taskList.appendChild(row);
-            });
+                completedTaskList.appendChild(emptyRow);
+            } else {
+                completedTasks.forEach((task, index) => {
+                    const row = document.createElement('tr');
+                    const completedDate = new Date(task.completedDate).toLocaleString();
+
+                    row.innerHTML = `
+                        <td title="${task.name}">${truncateText(task.name, 40)}</td>
+                        <td title="${completedDate}">${completedDate}</td>
+                        <td class="actions-group">
+                            <button onclick="viewTask(${task.id})" class="btn btn-view btn-icon" data-tooltip="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteTask(${task.id})" class="btn btn-danger btn-icon" data-tooltip="Delete Task">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    completedTaskList.appendChild(row);
+                });
+            }
         }
 
         // Update the original renderTasks function to use the new filtering system
@@ -1843,6 +2059,22 @@
                 } catch (error) {
                     console.error(`Error updating clock for ${city}:`, error);
                 }
+            }
+        }
+
+        // Add this new function for deleting all completed tasks
+        function deleteAllCompletedTasks() {
+            const completedTasks = tasks.filter(task => task.completed);
+            if (completedTasks.length === 0) {
+                alert('No completed tasks to delete.');
+                return;
+            }
+
+            const confirmDelete = confirm(`Are you sure you want to delete all ${completedTasks.length} completed tasks?`);
+            if (confirmDelete) {
+                tasks = tasks.filter(task => !task.completed);
+                saveTasks();
+                renderTasks();
             }
         }
     </script>
