@@ -1,4 +1,4 @@
-# Task Management Application
+# Concierge - A Task Management Application
 
 A modern, responsive task management web application with dark/light theme support.
 
