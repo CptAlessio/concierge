@@ -93,6 +93,13 @@
             color: white;
         }
 
+        .sidebar-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            background-color: var(--text-muted);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -240,7 +247,7 @@
         .modal {
             display: none;
             position: fixed;
-            z-index: 1;
+            z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
@@ -262,6 +269,7 @@
             box-shadow: 0 4px 6px var(--shadow-color);
             max-height: 80vh;
             overflow-y: auto;
+            z-index: 1001;
         }
 
         .close {
@@ -936,6 +944,47 @@
         .btn-complete i {
             margin-right: 8px !important;
         }
+
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            padding: 0 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .tab-button:hover {
+            color: var(--text-color);
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .tab-button i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -943,7 +992,7 @@
         <button id="openModalBtn" class="sidebar-btn" title="Add Task">
             <i class="fas fa-plus"></i>
         </button>
-        <button onclick="openCalendar()" class="sidebar-btn" title="Calendar">
+        <button id="calendarBtn" class="sidebar-btn" title="Calendar">
             <i class="fas fa-calendar-alt"></i>
         </button>
         <button onclick="exportTasks()" class="sidebar-btn" title="Export Tasks">
@@ -971,225 +1020,248 @@
                 <h1>Concierge</h1>
             </div>
             
-            <!-- Add this right after the header div and before the table -->
-            <div class="filter-bar">
-                <div class="filter-group">
-                    <label for="filterPriority">Priority:</label>
-                    <select id="filterPriority" onchange="applyFilters()">
-                        <option value="">All</option>
-                        <option value="Low">Low</option>
-                        <option value="Normal">Normal</option>
-                        <option value="Urgent">Urgent</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="filterDeadline">Deadline:</label>
-                    <select id="filterDeadline" onchange="applyFilters()">
-                        <option value="">All</option>
-                        <option value="overdue">Overdue</option>
-                        <option value="today">Today</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="searchTasks">Search:</label>
-                    <input type="text" id="searchTasks" placeholder="Search tasks..." oninput="applyFilters()">
-                </div>
-                <div class="sort-group">
-                    <label for="sortBy">Sort By:</label>
-                    <select id="sortBy" onchange="applyFilters()">
-                        <option value="deadline">Deadline</option>
-                        <option value="priority">Priority</option>
-                        <option value="name">Name</option>
-                    </select>
-                    <button class="btn btn-icon" onclick="toggleSortDirection()" id="sortDirection" data-tooltip="Sort Direction">
-                        <i class="fas fa-sort-amount-down"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Add this right after the filter-bar div -->
-            <div id="notificationBanner" class="notification-banner" style="display: none;">
-                <i class="fas fa-bell"></i>
-                <span>Enable notifications to get reminders for upcoming tasks</span>
-                <button onclick="requestNotificationPermission()" class="btn btn-primary">Enable Notifications</button>
-                <button onclick="dismissNotificationBanner()" class="btn btn-icon" data-tooltip="Dismiss">
-                    <i class="fas fa-times"></i>
+            <!-- Add tab navigation -->
+            <div class="tab-navigation" style="margin-bottom: 20px;">
+                <button id="activeTasksTab" class="tab-button active" onclick="switchTab('active')">
+                    <i class="fas fa-tasks"></i> Active Tasks
+                </button>
+                <button id="completedTasksTab" class="tab-button" onclick="switchTab('completed')">
+                    <i class="fas fa-check-circle"></i> Completed Tasks
                 </button>
             </div>
 
-            <!-- Add the modal HTML -->
-            <div id="taskModal" class="modal">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h2>Add New Task</h2>
-                    <form id="taskForm">
-                        <div class="form-group">
-                            <label for="name">Name:</label>
-                            <input type="text" id="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Description:</label>
-                            <textarea id="description" rows="3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="links">Links:</label>
-                            <input type="text" id="links">
-                        </div>
-                        <div class="form-group">
-                            <label for="priority">Priority:</label>
-                            <select id="priority">
-                                <option value="Low">Low</option>
-                                <option value="Normal">Normal</option>
-                                <option value="Urgent">Urgent</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="deadline">Deadline:</label>
-                            <input type="datetime-local" id="deadline" required>
-                        </div>
-                        <div class="notification-settings">
-                            <h3>Notification Settings</h3>
-                            <div class="notification-option">
-                                <input type="checkbox" id="notifyDay" checked>
-                                <label for="notifyDay">Notify 1 day before deadline</label>
+            <!-- Active Tasks Section -->
+            <div id="activeTasksSection">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label for="filterPriority">Priority:</label>
+                        <select id="filterPriority" onchange="applyFilters()">
+                            <option value="">All</option>
+                            <option value="Low">Low</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterDeadline">Deadline:</label>
+                        <select id="filterDeadline" onchange="applyFilters()">
+                            <option value="">All</option>
+                            <option value="overdue">Overdue</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="searchTasks">Search:</label>
+                        <input type="text" id="searchTasks" placeholder="Search tasks..." oninput="applyFilters()">
+                    </div>
+                    <div class="sort-group">
+                        <label for="sortBy">Sort By:</label>
+                        <select id="sortBy" onchange="applyFilters()">
+                            <option value="deadline">Deadline</option>
+                            <option value="priority">Priority</option>
+                            <option value="name">Name</option>
+                        </select>
+                        <button class="btn btn-icon" onclick="toggleSortDirection()" id="sortDirection" data-tooltip="Sort Direction">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add this right after the filter-bar div -->
+                <div id="notificationBanner" class="notification-banner" style="display: none;">
+                    <i class="fas fa-bell"></i>
+                    <span>Enable notifications to get reminders for upcoming tasks</span>
+                    <button onclick="requestNotificationPermission()" class="btn btn-primary">Enable Notifications</button>
+                    <button onclick="dismissNotificationBanner()" class="btn btn-icon" data-tooltip="Dismiss">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Add the modal HTML -->
+                <div id="taskModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h2>Add New Task</h2>
+                        <form id="taskForm">
+                            <div class="form-group">
+                                <label for="name">Name:</label>
+                                <input type="text" id="name" required>
                             </div>
-                            <div class="notification-option">
-                                <input type="checkbox" id="notifyHour" checked>
-                                <label for="notifyHour">Notify 1 hour before deadline</label>
+                            <div class="form-group">
+                                <label for="description">Description:</label>
+                                <textarea id="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="links">Links:</label>
+                                <input type="text" id="links">
+                            </div>
+                            <div class="form-group">
+                                <label for="priority">Priority:</label>
+                                <select id="priority">
+                                    <option value="Low">Low</option>
+                                    <option value="Normal">Normal</option>
+                                    <option value="Urgent">Urgent</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="deadline">Deadline:</label>
+                                <input type="datetime-local" id="deadline" required>
+                            </div>
+                            <div class="notification-settings">
+                                <h3>Notification Settings</h3>
+                                <div class="notification-option">
+                                    <input type="checkbox" id="notifyDay" checked>
+                                    <label for="notifyDay">Notify 1 day before deadline</label>
+                                </div>
+                                <div class="notification-option">
+                                    <input type="checkbox" id="notifyHour" checked>
+                                    <label for="notifyHour">Notify 1 hour before deadline</label>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                                <button type="submit" class="btn btn-primary">Add Task</button>
+                                <button type="button" id="completeTaskBtn" class="btn btn-complete" style="display: none; margin-left: auto;">
+                                    <i class="fas fa-check"></i> Mark as Complete
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Add this new modal HTML right after the existing taskModal div -->
+                <div id="viewTaskModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" id="viewModalClose">&times;</span>
+                        <h2>Task Details</h2>
+                        <div class="task-details">
+                            <div class="detail-group">
+                                <label>Name:</label>
+                                <p id="viewName"></p>
+                            </div>
+                            <div class="detail-group">
+                                <label>Description:</label>
+                                <p id="viewDescription"></p>
+                            </div>
+                            <div class="detail-group">
+                                <label>Links:</label>
+                                <p id="viewLinks"></p>
+                            </div>
+                            <div class="detail-group">
+                                <label>Priority:</label>
+                                <p id="viewPriority"></p>
+                            </div>
+                            <div class="detail-group">
+                                <label>Deadline:</label>
+                                <p id="viewDeadline"></p>
                             </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                            <button type="submit" class="btn btn-primary">Add Task</button>
-                            <button type="button" id="completeTaskBtn" class="btn btn-complete" style="display: none; margin-left: auto;">
-                                <i class="fas fa-check"></i> Mark as Complete
+                    </div>
+                </div>
+
+                <!-- Add this new modal HTML after the viewTaskModal div -->
+                <div id="calendarModal" class="modal">
+                    <div class="modal-content calendar-modal">
+                        <span class="close" id="calendarClose">&times;</span>
+                        <h2>Task Calendar</h2>
+                        <div class="calendar-controls">
+                            <button class="btn btn-secondary" onclick="previousMonth()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h3 id="currentMonth"></h3>
+                            <button class="btn btn-secondary" onclick="nextMonth()">
+                                <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Add this new modal HTML right after the existing taskModal div -->
-            <div id="viewTaskModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" id="viewModalClose">&times;</span>
-                    <h2>Task Details</h2>
-                    <div class="task-details">
-                        <div class="detail-group">
-                            <label>Name:</label>
-                            <p id="viewName"></p>
-                        </div>
-                        <div class="detail-group">
-                            <label>Description:</label>
-                            <p id="viewDescription"></p>
-                        </div>
-                        <div class="detail-group">
-                            <label>Links:</label>
-                            <p id="viewLinks"></p>
-                        </div>
-                        <div class="detail-group">
-                            <label>Priority:</label>
-                            <p id="viewPriority"></p>
-                        </div>
-                        <div class="detail-group">
-                            <label>Deadline:</label>
-                            <p id="viewDeadline"></p>
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <div>Sun</div>
+                                <div>Mon</div>
+                                <div>Tue</div>
+                                <div>Wed</div>
+                                <div>Thu</div>
+                                <div>Fri</div>
+                                <div>Sat</div>
+                            </div>
+                            <div id="calendarDays" class="calendar-days"></div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Add this new modal HTML after the calendarModal div -->
+                <div id="worldClockModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" id="worldClockClose">&times;</span>
+                        <h2>World Clock</h2>
+                        <div class="world-clock-container">
+                            <div class="clock-item">
+                                <div class="city">San Francisco</div>
+                                <div class="time" id="sf-time"></div>
+                                <div class="date" id="sf-date"></div>
+                            </div>
+                            <div class="clock-item">
+                                <div class="city">New York</div>
+                                <div class="time" id="ny-time"></div>
+                                <div class="date" id="ny-date"></div>
+                            </div>
+                            <div class="clock-item">
+                                <div class="city">London</div>
+                                <div class="time" id="london-time"></div>
+                                <div class="date" id="london-date"></div>
+                            </div>
+                            <div class="clock-item">
+                                <div class="city">Dublin</div>
+                                <div class="time" id="dublin-time"></div>
+                                <div class="date" id="dublin-date"></div>
+                            </div>
+                            <div class="clock-item">
+                                <div class="city">Geneva</div>
+                                <div class="time" id="geneva-time"></div>
+                                <div class="date" id="geneva-date"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <table id="taskTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Priority</th>
+                            <th>Deadline</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskList"></tbody>
+                </table>
             </div>
 
-            <!-- Add this new modal HTML after the viewTaskModal div -->
-            <div id="calendarModal" class="modal">
-                <div class="modal-content calendar-modal">
-                    <span class="close" id="calendarClose">&times;</span>
-                    <h2>Task Calendar</h2>
-                    <div class="calendar-controls">
-                        <button class="btn btn-secondary" onclick="previousMonth()">
-                            <i class="fas fa-chevron-left"></i>
+            <!-- Completed Tasks Section -->
+            <div id="completedTasksSection" style="display: none;">
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="filter-group">
+                            <label for="completedFilter">Show:</label>
+                            <select id="completedFilter" onchange="applyCompletedFilter()" style="min-width: 120px;">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="lastweek">Last Week</option>
+                            </select>
+                        </div>
+                        <button onclick="deleteAllCompletedTasks()" class="btn" style="margin: 0; background-color: #94a3b8; color: white; font-size: 0.875rem; padding: 6px 12px;">
+                            <i class="fas fa-trash-alt"></i> Clear Completed
                         </button>
-                        <h3 id="currentMonth"></h3>
-                        <button class="btn btn-secondary" onclick="nextMonth()">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
                     </div>
-                    <div class="calendar-container">
-                        <div class="calendar-header">
-                            <div>Sun</div>
-                            <div>Mon</div>
-                            <div>Tue</div>
-                            <div>Wed</div>
-                            <div>Thu</div>
-                            <div>Fri</div>
-                            <div>Sat</div>
-                        </div>
-                        <div id="calendarDays" class="calendar-days"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add this new modal HTML after the calendarModal div -->
-            <div id="worldClockModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" id="worldClockClose">&times;</span>
-                    <h2>World Clock</h2>
-                    <div class="world-clock-container">
-                        <div class="clock-item">
-                            <div class="city">San Francisco</div>
-                            <div class="time" id="sf-time"></div>
-                            <div class="date" id="sf-date"></div>
-                        </div>
-                        <div class="clock-item">
-                            <div class="city">New York</div>
-                            <div class="time" id="ny-time"></div>
-                            <div class="date" id="ny-date"></div>
-                        </div>
-                        <div class="clock-item">
-                            <div class="city">London</div>
-                            <div class="time" id="london-time"></div>
-                            <div class="date" id="london-date"></div>
-                        </div>
-                        <div class="clock-item">
-                            <div class="city">Dublin</div>
-                            <div class="time" id="dublin-time"></div>
-                            <div class="date" id="dublin-date"></div>
-                        </div>
-                        <div class="clock-item">
-                            <div class="city">Geneva</div>
-                            <div class="time" id="geneva-time"></div>
-                            <div class="date" id="geneva-date"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <table id="taskTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Priority</th>
-                        <th>Deadline</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="taskList"></tbody>
-            </table>
-
-            <div id="completedTasksSection" style="display: none; margin-top: 60px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="color: var(--text-muted); margin: 0;">Completed Tasks</h2>
-                    <button onclick="deleteAllCompletedTasks()" class="btn btn-danger" style="margin: 0;">
-                        <i class="fas fa-trash-alt"></i> Delete All Completed
-                    </button>
                 </div>
                 <table id="completedTaskTable">
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Description</th>
                             <th>Completed Date</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="completedTaskList"></tbody>
@@ -1227,7 +1299,15 @@
         // Add these modal functions
         const modal = document.getElementById('taskModal');
         const openModalBtn = document.getElementById('openModalBtn');
+        const calendarBtn = document.getElementById('calendarBtn');
         const closeBtn = document.getElementsByClassName('close')[0];
+
+        // Add calendar button click handler
+        calendarBtn.onclick = function() {
+            if (!calendarBtn.classList.contains('disabled')) {
+                openCalendar();
+            }
+        }
 
         openModalBtn.onclick = function() {
             modal.style.display = "block";
@@ -1312,7 +1392,11 @@
                 if (confirmDelete) {
                     tasks = tasks.filter(task => task.id !== taskId);
                     saveTasks();
-                    renderTasks();
+                    if (task.completed) {
+                        applyCompletedFilter();
+                    } else {
+                        renderTasks();
+                    }
                 }
             }
         }
@@ -1428,7 +1512,11 @@
                     dateValue.textContent = new Date(task.deadline).toLocaleString();
                 }
                 
+                const viewModal = document.getElementById('viewTaskModal');
                 viewModal.style.display = "block";
+                
+                // Ensure the modal is on top of everything
+                viewModal.style.zIndex = "1000";
             }
         }
 
@@ -1597,10 +1685,6 @@
             const activeTasks = filteredTasks.filter(task => !task.completed);
             const completedTasks = filteredTasks.filter(task => task.completed);
             
-            // Show/hide completed tasks section based on whether there are completed tasks
-            const completedTasksSection = document.getElementById('completedTasksSection');
-            completedTasksSection.style.display = completedTasks.length > 0 ? 'block' : 'none';
-            
             // Render active tasks
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
@@ -1663,6 +1747,7 @@
 
                     row.innerHTML = `
                         <td title="${task.name}">${truncateText(task.name, 40)}</td>
+                        <td style="white-space: pre-wrap;">${task.description || 'No description'}</td>
                         <td title="${completedDate}">${completedDate}</td>
                         <td class="actions-group">
                             <button onclick="viewTask(${task.id})" class="btn btn-view btn-icon" data-tooltip="View Details">
@@ -2074,7 +2159,140 @@
             if (confirmDelete) {
                 tasks = tasks.filter(task => !task.completed);
                 saveTasks();
-                renderTasks();
+                applyCompletedFilter();
+            }
+        }
+
+        // Add tab switching functionality
+        function switchTab(tab) {
+            // Update tab buttons
+            document.getElementById('activeTasksTab').classList.toggle('active', tab === 'active');
+            document.getElementById('completedTasksTab').classList.toggle('active', tab === 'completed');
+
+            // Show/hide sections
+            document.getElementById('activeTasksSection').style.display = tab === 'active' ? 'block' : 'none';
+            document.getElementById('completedTasksSection').style.display = tab === 'completed' ? 'block' : 'none';
+
+            // Get sidebar buttons
+            const addTaskBtn = document.getElementById('openModalBtn');
+            const calendarBtn = document.getElementById('calendarBtn');
+
+            if (tab === 'completed') {
+                // Disable buttons in completed view
+                addTaskBtn.classList.add('disabled');
+                addTaskBtn.title = 'Cannot add tasks in completed view';
+                calendarBtn.classList.add('disabled');
+                calendarBtn.title = 'Calendar view not available in completed tasks';
+            } else {
+                // Enable buttons in active view
+                addTaskBtn.classList.remove('disabled');
+                addTaskBtn.title = 'Add Task';
+                calendarBtn.classList.remove('disabled');
+                calendarBtn.title = 'Calendar';
+            }
+
+            // Update the current tab in localStorage
+            localStorage.setItem('currentTab', tab);
+
+            if (tab === 'completed') {
+                // Apply completed tasks filter when switching to completed tab
+                applyCompletedFilter();
+            }
+        }
+
+        // Add this to your initialization code
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... existing initialization code ...
+
+            // Restore the last active tab
+            const lastActiveTab = localStorage.getItem('currentTab') || 'active';
+            switchTab(lastActiveTab);
+        });
+
+        // Add function to check if a date is within the last week (Monday to Sunday)
+        function isWithinLastWeek(date) {
+            const today = new Date();
+            const currentWeekMonday = new Date();
+            const dayOfWeek = today.getDay();
+            
+            // Get this week's Monday
+            currentWeekMonday.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+            currentWeekMonday.setHours(0, 0, 0, 0);
+            
+            // Get last week's Monday (7 days before this week's Monday)
+            const lastWeekMonday = new Date(currentWeekMonday);
+            lastWeekMonday.setDate(currentWeekMonday.getDate() - 7);
+            
+            // Get last week's Sunday (6 days after last week's Monday)
+            const lastWeekSunday = new Date(lastWeekMonday);
+            lastWeekSunday.setDate(lastWeekMonday.getDate() + 6);
+            lastWeekSunday.setHours(23, 59, 59, 999);
+            
+            return date >= lastWeekMonday && date <= lastWeekSunday;
+        }
+
+        // Add function to check if a date is yesterday
+        function isYesterday(date) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            return date.toDateString() === yesterday.toDateString();
+        }
+
+        // Add function to check if a date is today
+        function isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        // Add completed tasks filter function
+        function applyCompletedFilter() {
+            const filterValue = document.getElementById('completedFilter').value;
+            const completedTaskList = document.getElementById('completedTaskList');
+            completedTaskList.innerHTML = '';
+
+            let filteredTasks = tasks.filter(task => task.completed);
+
+            // Apply time filter
+            if (filterValue !== 'all') {
+                filteredTasks = filteredTasks.filter(task => {
+                    const completedDate = new Date(task.completedDate);
+                    switch (filterValue) {
+                        case 'today':
+                            return isToday(completedDate);
+                        case 'yesterday':
+                            return isYesterday(completedDate);
+                        case 'lastweek':
+                            return isWithinLastWeek(completedDate);
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            // Sort by completion date (most recent first)
+            filteredTasks.sort((a, b) => new Date(b.completedDate) - new Date(a.completedDate));
+
+            if (filteredTasks.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="3" style="text-align: center; padding: 12px;">
+                        <i class="fas fa-check-circle" style="font-size: 20px; color: var(--text-muted); margin-bottom: 8px;"></i>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">No completed tasks found for the selected period</p>
+                    </td>
+                `;
+                completedTaskList.appendChild(emptyRow);
+            } else {
+                filteredTasks.forEach(task => {
+                    const row = document.createElement('tr');
+                    const completedDate = new Date(task.completedDate).toLocaleString();
+
+                    row.innerHTML = `
+                        <td title="${task.name}">${truncateText(task.name, 40)}</td>
+                        <td style="white-space: pre-wrap;">${task.description || 'No description'}</td>
+                        <td title="${completedDate}">${completedDate}</td>
+                    `;
+                    completedTaskList.appendChild(row);
+                });
             }
         }
     </script>
